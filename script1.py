@@ -82,36 +82,118 @@ def changeSpatialDomain ( iType , iImage , iX , iY , iMode = None , iBgr =0) :
             
             ratio_y = iY/iImage.shape[0]
             reminder_y = ratio_y-np.floor(ratio_y)
-            flip_y=-1
-            counter_y =np.floor(ratio_y)
-            for i in range(int(counter_y)):
+            counter_y =int(np.floor(ratio_y))
 
-                    sp_x=iX #spodnja meja x
-                    zg_x = sp_x + iImage.shape[1] #zgornja meja x
+            ratio_x = iX/iImage.shape[1]
+            reminder_x = ratio_x-np.floor(ratio_x)
+            counter_x =int(np.floor(ratio_x))
+            
+            position_x = list(range(0,counter_x+1))
+            position_x= [item *(-1) for item in position_x][::-1]+position_x
+            position_x.remove(0)
+    
+            position_y = list(range(0,counter_y+1))
+            position_y= [item *(-1) for item in position_y][::-1]+position_y
+            position_y.remove(0)
 
+            print(ratio_x)
+            print(ratio_y)
+
+        
+            flip_x=-1
+            if int(ratio_x)%2==0:
+                flip_y=1
+            else:
+                flip_y=-1
+            
+            
+
+            lower_section = iImage.shape[0]-int(iImage.shape[0]*reminder_y)
+            upper_section = int(iImage.shape[0]*reminder_y)
+            left_section = int(iImage.shape[1]*reminder_x)
+            right_section = iImage.shape[1]-int(iImage.shape[1]*reminder_x)
+
+            
+
+            
+            for k in position_x:
+                for i in range(int(counter_y)):
+
+                    
+
+                    zg_x = iX + (k+1)*iImage.shape[1] #zgornja meja x
+                    sp_x= zg_x - iImage.shape[1] #spodnja meja x
+             
                     zg_gor_y = iY - i*iImage.shape[0] #zgornja meja gor y
                     sp_gor_y = zg_gor_y - iImage.shape[0] #spodnja meja gor y
 
                     zg_dol_y = iY + 2*iImage.shape[0] + i*iImage.shape[0] #zgornja meja desno x
                     sp_dol_y = zg_dol_y - iImage.shape[0] #spodnja meja desno x
+                    
+                    
 
-                    oImage[sp_gor_y : zg_gor_y, sp_x : zg_x]=iImage[0:iImage.shape[0],:][::flip_y,:]  #gor
-                    oImage[sp_dol_y : zg_dol_y, sp_x : zg_x]=iImage[0:iImage.shape[0],:][::flip_y,:]  #dol
-                    flip_y=flip_y*(-1)
-        
+                    oImage[sp_gor_y : zg_gor_y, sp_x : zg_x]=iImage[::flip_x,::flip_y]  #gor
+                    oImage[sp_dol_y : zg_dol_y, sp_x : zg_x]=iImage[::flip_x,::flip_y]  #dol
+                
+                    if k != 0:
+                        oImage[iY : iY + iImage.shape[0], sp_x : zg_x]=iImage[:,::flip_y]  #levo
+                        oImage[iY : iY + iImage.shape[0], sp_x : zg_x]=iImage[:,::flip_y]  #desno
+
+                    if reminder_y != 0 or reminder_x != 0:
+
+                        if counter_y%2!=0:
+
+                            oImage[0 : int(iY-counter_y*iImage.shape[0]), sp_x : zg_x]= iImage[lower_section:,:][::-flip_x,::flip_y] #gor
+                            oImage[int(iY+counter_y*iImage.shape[0]+iImage.shape[0]):oImage.shape[0],sp_x : zg_x]= iImage[:upper_section,:][::-flip_x,::flip_y] #dol  
+                        else:
+                            oImage[0 : int(iY-counter_y*iImage.shape[0]), sp_x : zg_x]= iImage[:upper_section,:][::-flip_x,::flip_y] #gor
+                            oImage[int(iY+counter_y*iImage.shape[0]+iImage.shape[0]):oImage.shape[0],sp_x : zg_x]= iImage[lower_section:,:][::-flip_x,::flip_y] #dol  
+
+                        if counter_x%2!=0:
+
+                            oImage[sp_gor_y : zg_gor_y, 0:int(iX-counter_x*iImage.shape[1])]= iImage[:,right_section:][::flip_x,::-flip_y] #levo gor
+                            oImage[sp_gor_y : zg_gor_y, int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):oImage.shape[1]]= iImage[:,0:left_section][::flip_x,::-flip_y] #desno gor
+
+                            oImage[iY : iY+iImage.shape[0], 0:int(iX-counter_x*iImage.shape[1])]= iImage[:,right_section:][::-flip_x,::-flip_y] #levo v sredini
+                            oImage[iY : iY+iImage.shape[0], int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):oImage.shape[1]]= iImage[:,0:left_section][::-flip_x,::-flip_y] #desno v sredini
+
+                            oImage[sp_dol_y : zg_dol_y, 0:int(iX-counter_x*iImage.shape[1])]= iImage[:,right_section:][::flip_x,::-flip_y] #levo dol
+                            oImage[sp_dol_y : zg_dol_y, int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):oImage.shape[1]]= iImage[:,0:left_section][::flip_x,::-flip_y] #desno dol
+
+                        else:
+                            oImage[sp_gor_y : zg_gor_y, 0:int(iX-counter_x*iImage.shape[1])]= iImage[:,:left_section][::flip_x,::-flip_y] #levo gor
+                            oImage[sp_gor_y : zg_gor_y, int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):oImage.shape[1]]= iImage[:,right_section:][::flip_x,::-flip_y] #desno gor 
+
+                            oImage[iY : iY+iImage.shape[0], 0:int(iX-counter_x*iImage.shape[1])]= iImage[:,:left_section][::-flip_x,::-flip_y] #levo v sredini
+                            oImage[iY : iY+iImage.shape[0], int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):oImage.shape[1]]= iImage[:,right_section:][::-flip_x,::-flip_y] #desno v sredini
+
+                            oImage[sp_dol_y : zg_dol_y, 0:int(iX-counter_x*iImage.shape[1])]= iImage[:,:left_section][::flip_x,::-flip_y] #levo dol
+                            oImage[sp_dol_y : zg_dol_y, int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):oImage.shape[1]]= iImage[:,right_section:][::flip_x,::-flip_y] #desno dol     
+                
+                    
+                    flip_x=-flip_x
+                flip_x=-1
+                
+                flip_y=-flip_y
+            '''
+                        
             if counter_y%2==0:
-                oImage[0 : int(iY-counter_y*iImage.shape[0]), sp_x : zg_x]= iImage[0:int(iImage.shape[0]*reminder_y),:][::flip_y,:] #gor
-                oImage[int(iY+counter_y*iImage.shape[0]+iImage.shape[0]):oImage.shape[0],sp_x : zg_x]= iImage[iImage.shape[0]-int(iImage.shape[0]*reminder_y):iImage.shape[0],:][::flip_y,:] #dol          
-            else:
-                oImage[0:int(iY-counter_y*iImage.shape[0]), sp_x : zg_x]= iImage[iImage.shape[0]-int(iImage.shape[0]*reminder_y):iImage.shape[0],:][::flip_y,:]   #gor  
-                oImage[int(iY+counter_y*iImage.shape[0]+iImage.shape[1]):oImage.shape[0],sp_x : zg_x]= iImage[0:int(iImage.shape[0]*reminder_y),:][::flip_y,:]   #dol   
+                oImage[iY : iY+iImage.shape[0], 0 : int(iX-counter_x*iImage.shape[1])] = iImage[:,0:left_section][:,::flip_x] #levo
+                oImage[iY : iY+iImage.shape[0], int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):]= iImage[:,right_section:][:,::flip_x] #desno   
+
+                oImage[0 : upper_section , 0 : left_section] = iImage[0 : upper_section, 0 : left_section][:,::flip_x]
+                oImage[oImage.shape[0]-lower_section :, 0 : left_section] = iImage[0 : lower_section, 0 : left_section][:,::flip_x]
+                oImage[0 : upper_section , oImage.shape[1]-right_section :] = iImage[0 : upper_section, 0 : right_section][:,::flip_x]
+                oImage[oImage.shape[0]-lower_section : , oImage.shape[1]-right_section :] = iImage[0 : lower_section, 0 : right_section][:,::flip_x]
+
+            '''                
+
+                
 
 
-            ratio_x = iX/iImage.shape[1]
-            reminder_x = ratio_x-np.floor(ratio_x)
-            flip_x=-1
-            counter_x =np.floor(ratio_x)
-            for i in range(int(counter_x)):
+
+            
+            '''
                     sp_y=iY #spodnja meja y
                     zg_y = sp_y + iImage.shape[0] #zgornja meja y
 
@@ -124,17 +206,20 @@ def changeSpatialDomain ( iType , iImage , iX , iY , iMode = None , iBgr =0) :
                     oImage[sp_y : zg_y,sp_levo_x:zg_levo_x]=iImage[:,0:iImage.shape[1]][:,::flip_x]  #levo
                     oImage[sp_y : zg_y,sp_desno_x:zg_desno_x]=iImage[:,0:iImage.shape[1]][:,::flip_x]  #desno
 
+                   # oImage[iY - i*iImage.shape[0]- iImage.shape[0]:iY - i*iImage.shape[0],sp_levo_x:zg_levo_x]=iImage[:,0:iImage.shape[1]][::-flip_y,::flip_x]  #levo gor
+                   # oImage[iY - i*iImage.shape[0]- iImage.shape[0]:iY - i*iImage.shape[0],sp_desno_x:zg_desno_x]=iImage[:,0:iImage.shape[1]][::-flip_y,::-flip_x]  #desno gor
+
+                   # oImage[iY + i*iImage.shape[0] + iImage.shape[0]:iY + 2*iImage.shape[0] + i*iImage.shape[0],sp_levo_x:zg_levo_x]=iImage[:,0:iImage.shape[1]][::-flip_y,::flip_x]  #levo dol
+                   # oImage[iY + i*iImage.shape[0] + iImage.shape[0]:iY + 2*iImage.shape[0] + i*iImage.shape[0],sp_desno_x:zg_desno_x]=iImage[:,0:iImage.shape[1]][::-flip_y,::-flip_x]  #desno dol
+
                     flip_x=flip_x*(-1)
         
             if counter_x%2==0:
-                oImage[iY:iY+iImage.shape[0],0:int(iX-counter_x*iImage.shape[1])]= iImage[:,0:int(iImage.shape[1]*reminder_x)][:,::flip_x] #levo
-                oImage[iY:iY+iImage.shape[0],int(iX+counter_x*iImage.shape[1]+iImage.shape[1]):oImage.shape[1]]= iImage[:,iImage.shape[1]-int(iImage.shape[1]*reminder_x):iImage.shape[1]][:,::flip_x] #desno          
-            else:
-                oImage[iY:iY+iImage.shape[0],0:int(iX-counter_x*iImage.shape[1])]= iImage[:,iImage.shape[1]-int(iImage.shape[1]*reminder_x):iImage.shape[1]][:,::flip_x]   #levo
-                oImage[iY:iY+iImage.shape[0],int(iX+counter_x*iImage.shape[1]+iImage.shape[0]):oImage.shape[1]]= iImage[:,0:int(iImage.shape[1]*reminder_x)][:,::flip_x]   #desno 
-
+                
+                oImage[sp_y : zg_y, 0:int(iX-counter_x*iImage.shape[1])]= iImage[:,iImage.shape[1]-int(iImage.shape[1]*reminder_x):iImage.shape[1]][:,::flip_x]   #levo
+                oImage[sp_y : zg_y ,int(iX+counter_x*iImage.shape[1]+iImage.shape[0]):oImage.shape[1]]= iImage[:,0:int(iImage.shape[1]*reminder_x)][:,::flip_x]   #desno 
             
-          
+            '''
     
            
     elif iType == 'reduce':
@@ -220,6 +305,6 @@ if __name__ == '__main__':
     iI = changeSpatialDomain('enlarge',iImage=I,iX=128,iY=384,iMode='extrapolation',iBgr=127)
     displayImage(iI,"extr")
 
-    iI = changeSpatialDomain('enlarge',iImage=I,iX=384,iY=384,iMode='reflection',iBgr=127)
+    iI = changeSpatialDomain('enlarge',iImage=I,iX=384+256,iY=384,iMode='reflection',iBgr=127)
     displayImage(iI,"ref")
 
